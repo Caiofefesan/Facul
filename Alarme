@@ -1,0 +1,73 @@
+// --- Definição dos Pinos ---
+const int pinoBotao = 7;        // Pino onde o botão está conectado
+const int pinoLedVerde = 4;     // Pino do LED Verde (Seguro)
+const int pinoLedVermelho = 2;  // Pino do LED Vermelho (Alarme)
+const int pinoBuzzer = 8;       // Pino do Buzzer
+
+// --- Variáveis de Controle ---
+bool alarmeAtivado = false;         // Estado atual do alarme (falso = desligado)
+bool estadoBotaoAnterior = HIGH;    // Para detectar o clique do botão
+bool estadoLedPisca = LOW;          // Para controlar o pisca-pisca
+
+unsigned long tempoAnterior = 0;    // Para armazenar o tempo para o pisca
+const long intervalo = 500;         // Intervalo do pisca em milissegundos (500ms = 0.5s)
+
+void setup() {
+  // Configura o pino do botão com resistor de pull-up interno
+  // Isso significa que o pino lê HIGH quando solto e LOW quando apertado
+  pinMode(pinoBotao, INPUT_PULLUP);
+  
+  // Configura os pinos dos LEDs e do Buzzer como saída
+  pinMode(pinoLedVerde, OUTPUT);
+  pinMode(pinoLedVermelho, OUTPUT);
+  pinMode(pinoBuzzer, OUTPUT);
+
+  // --- Estado Inicial ---
+  digitalWrite(pinoLedVerde, HIGH);   // LED Verde ACESO
+  digitalWrite(pinoLedVermelho, LOW); // LED Vermelho APAGADO
+  noTone(pinoBuzzer);                 // Buzzer DESLIGADO
+}
+
+void loop() {
+  // 1. Ler o estado atual do botão
+  bool estadoBotaoAtual = digitalRead(pinoBotao);
+
+  // 2. Detectar se o botão foi pressionado (mudança de HIGH para LOW)
+  if (estadoBotaoAnterior == HIGH && estadoBotaoAtual == LOW) {
+    alarmeAtivado = !alarmeAtivado; // Inverte o estado do alarme (liga se tava desligado, desliga se tava ligado)
+    delay(50); // Pequeno delay para evitar leituras falsas (debounce)
+  }
+  // Atualiza o estado anterior do botão para a próxima leitura
+  estadoBotaoAnterior = estadoBotaoAtual;
+
+  // 3. Lógica do Alarme
+  if (alarmeAtivado) {
+    // --- ALARME LIGADO ---
+    digitalWrite(pinoLedVerde, LOW); // Apaga o LED Verde
+
+    // Verifica se já passou o tempo para piscar
+    unsigned long tempoAtual = millis();
+    if (tempoAtual - tempoAnterior >= intervalo) {
+      // Salva o tempo atual como o último tempo que piscou
+      tempoAnterior = tempoAtual;
+
+      // Inverte o estado do LED que pisca
+      if (estadoLedPisca == LOW) {
+        estadoLedPisca = HIGH;
+        tone(pinoBuzzer, 2000); // Toca o buzzer (frequência de 2000Hz)
+      } else {
+        estadoLedPisca = LOW;
+        noTone(pinoBuzzer);    // Para o buzzer
+      }
+      // Atualiza o LED Vermelho com o novo estado
+      digitalWrite(pinoLedVermelho, estadoLedPisca);
+    }
+    
+  } else {
+    // --- ALARME DESLIGADO ---
+    digitalWrite(pinoLedVerde, HIGH);   // Acende o LED Verde
+    digitalWrite(pinoLedVermelho, LOW); // Apaga o LED Vermelho
+    noTone(pinoBuzzer);                 // Garante que o buzzer esteja mudo
+    estadoLedPisca = LOW;               // Reseta o estado do pisca
+  }
+}

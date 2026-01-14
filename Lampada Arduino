@@ -1,0 +1,17 @@
+// --- Definição dos Pinos ---
+const int pinoRele = 7;  // Define que o relé está no pino 7
+
+void setup() {
+  // Configura o pino do relé como saída de energia
+  pinMode(pinoRele, OUTPUT);
+}
+
+void loop() {
+  // --- Liga a Lâmpada ---
+  digitalWrite(pinoRele, HIGH); // Manda sinal (Liga o relé)
+  delay(1000);                  // Espera 1 segundo (1000 ms)
+
+  // --- Desliga a Lâmpada ---
+  digitalWrite(pinoRele, LOW);  // Corta o sinal (Desliga o relé)
+  delay(1000);                  // Espera 1 segundo
+}
